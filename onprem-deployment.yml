@@ -1,0 +1,64 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: vah-workspace-management
+  annotations:
+    alb.ingress.kubernetes.io/healthcheck-path: /contextPath
+  labels:
+    app: vahana
+spec:
+  type: NodePort
+  ports:
+    -  nodePort: 31800
+       port: 80
+       targetPort: 80
+       protocol: TCP
+  selector:
+    app: vahana
+
+---
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: vahana
+  name: vah-workspace-management
+spec:
+
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vahana
+  template:
+    metadata:
+      labels:
+        app: vahana
+    spec:
+      containers:
+        - name: vahana
+          image: 712693083859.dkr.ecr.ap-south-1.amazonaws.com/project_value
+          ports:
+            - containerPort: 80
+          imagePullPolicy: Always
+
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: awslogin
+
+---
+
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: vah-workspace-management
+spec:
+  rules:
+    - host:
+      http:
+        paths:
+          - path: /contextPath/
+            backend:
+              serviceName: vah-workspace-management
+              servicePort: 80
